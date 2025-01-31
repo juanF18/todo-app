@@ -3,37 +3,36 @@ import { onMounted, ref } from 'vue';
 import { useTodoStore } from '../store';
 import { loadTodos } from '../service/todoService';
 import TodoItem from './TodoItem.vue';
+import TaskModal from './TaskModal.vue';
 
-const store = useTodoStore()
-const newTodo = ref('')
+const store = useTodoStore();
+const showModal = ref(false); // Estado del modal
 
-const addTodo = () => {
-  if(newTodo.value.trim()){
-    store.addTodo(newTodo.value)
-    newTodo.value = ''
-  }
-}
+const addTodo = (taskTitle: string) => {
+  store.addTodo(taskTitle);
+  showModal.value = false; // Cierra el modal después de agregar
+};
 
-onMounted(loadTodos)
+onMounted(loadTodos);
 </script>
 
 <template>
   <div class="max-w-md mx-auto p-6 bg-white rounded-xl shadow-md">
     <h2 class="text-2xl font-bold text-center mb-4">Lista de Tareas</h2>
-    <div class="flex gap-2 mb-4">
-      <input
-        v-model="newTodo"
-        @keyup.enter="addTodo"
-        placeholder="Añadir tarea..."
-        class="flex-1 px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-      />
+
+    <!-- Botón para abrir el modal -->
+    <div class="flex justify-end mb-4">
       <button
-        @click="addTodo"
+        @click="showModal = true"
         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
       >
-        Agregar
+        + Nueva Tarea
       </button>
     </div>
+
+    <!-- Modal de Creación de Tareas -->
+    <TaskModal v-if="showModal" @close="showModal = false" @create="addTodo" />
+
     <ul class="space-y-2">
       <TodoItem
         v-for="todo in store.todos"
