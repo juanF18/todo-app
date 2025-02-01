@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import UserList from './UserList.vue'
-import UserModal from './UserModal.vue'
+import UserList from './components/UserList.vue'
+import UserModal from './components/UserModal.vue'
 
 const users = ref([
   { id: '1', name: 'Juan Pérez', email: 'juan@example.com' },
