@@ -1,39 +1,87 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import UserList from './components/UserList.vue'
-import UserModal from './components/UserModal.vue'
+import UserCreateModal from './components/UserCreateModal.vue'
+import UserUpdateModal from './components/UserUpdateModal.vue'
+import { getUsers, createUser, updateUser, deleteUser } from './service'
+import type { User, CreateUserDTO, UpdateUserDTO } from './model'
+import { useUserStore } from './store/userStore'
 
-const users = ref([
-  { id: '1', name: 'Juan Pérez', email: 'juan@example.com' },
-  { id: '2', name: 'Ana Gómez', email: 'ana@example.com' },
-])
+const users = ref<User[]>([])
+const userStore = useUserStore()
 
-const showModal = ref(false)
-
-const addUser = (user: { id: string; name: string; email: string }) => {
-  users.value.push(user)
-  showModal.value = false
+// Función para obtener usuarios
+const fetchUsers = async () => {
+  try {
+    const response = await getUsers()
+    users.value = response?.users ?? []
+  } catch (error) {
+    console.error('Error al obtener los usuarios:', error)
+  }
 }
+
+// Funciones para operaciones CRUD
+const addUser = async (userData: CreateUserDTO) => {
+  try {
+    await createUser(userData)
+    await fetchUsers() // Refrescar la lista después de crear
+  } catch (error) {
+    console.error('Error al crear el usuario:', error)
+  }
+}
+
+const updateUserById = async (id: string, userData: UpdateUserDTO) => {
+  try {
+    await updateUser(id, userData)
+    await fetchUsers() // Refrescar la lista después de actualizar
+  } catch (error) {
+    console.error('Error al actualizar el usuario:', error)
+  }
+}
+
+const deleteUserById = async (id: string) => {
+  try {
+    await deleteUser(id)
+    await fetchUsers() // Refrescar la lista después de eliminar
+  } catch (error) {
+    console.error('Error al eliminar el usuario:', error)
+  }
+}
+
+onMounted(fetchUsers)
 </script>
 
 <template>
-  <div class="bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto">
-    <h2 class="text-2xl font-bold mb-4">Usuarios</h2>
-
-    <!-- Botón para abrir el modal -->
-    <div class="flex justify-end mb-4">
+  <div class="min-h-screen bg-gray-50 p-6 max-w-4xl mx-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-3xl font-bold">Gestión de Usuarios</h1>
       <button
-        @click="showModal = true"
-        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        @click="userStore.openCreateModal"
+        class="bg-green-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-green-600 transition duration-300"
       >
-        + Nuevo Usuario
+        Crear Usuario
       </button>
     </div>
 
-    <!-- Modal de Creación de Usuarios -->
-    <UserModal v-if="showModal" @close="showModal = false" @add="addUser" />
+    <UserList
+      :key="users.length"
+      :users="users"
+      @edit="userStore.openUpdateModal"
+      @delete="deleteUserById"
+    />
 
-    <!-- Lista de Usuarios -->
-    <UserList :users="users" />
+    <UserCreateModal
+      :visible="userStore.isCreateModalVisible"
+      @close="userStore.closeCreateModal"
+      @add="addUser"
+    />
+
+    <UserUpdateModal
+      v-if="userStore.selectedUser"
+      :user="userStore.selectedUser"
+      :visible="userStore.isUpdateModalVisible"
+      @close="userStore.closeUpdateModal"
+      @update="updateUserById"
+    />
   </div>
 </template>

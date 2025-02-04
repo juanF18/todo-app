@@ -14,7 +14,7 @@ const navigate = (path: string) => {
   <aside
     :class="[
       'bg-gray-900 text-white h-{90vh} transition-all duration-300 shadow-xl rounded-xl',
-      isCollapsed ? 'w-16' : 'w-64'
+      isCollapsed ? 'w-16' : 'w-64',
     ]"
     class="flex flex-col p-4 m-4"
   >

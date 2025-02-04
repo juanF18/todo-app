@@ -1,10 +1,10 @@
 import axios, { type AxiosResponse, AxiosError } from 'axios'
 
-const api = axios.create({
+const Axios = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
 })
 
-api.interceptors.request.use(
+Axios.interceptors.request.use(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (config: any) => {
     if (config.url && !config.url.startsWith('http')) {
@@ -15,7 +15,7 @@ api.interceptors.request.use(
   (error: AxiosError) => Promise.reject(error),
 )
 
-api.interceptors.response.use(
+Axios.interceptors.response.use(
   (response: AxiosResponse) => {
     console.log(`✅ [${response.status}] Solicitud exitosa a ${response.config.url}`)
     return response
@@ -56,4 +56,4 @@ api.interceptors.response.use(
   },
 )
 
-export default api
+export default Axios
