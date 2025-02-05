@@ -5,6 +5,9 @@ import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import type { User, UpdateUserDTO } from '../model'
 import { updateUser } from '../service'
+import { useUserStore } from '../store/userStore'
+
+const userStore = useUserStore()
 
 const props = defineProps<{
   user: User
@@ -21,16 +24,18 @@ const handleUpdateUser = async () => {
       email: localUser.value.email,
     } as UpdateUserDTO)
     emit('user-updated', updatedUser)
-    emit('update:visible', false)
+    userStore.closeUpdateModal()
   } catch (error) {
     console.error('Error al actualizar el usuario:', error)
   }
 }
 
 watch(
-  () => props.user,
+  () => userStore.selectedUser,
   (newUser) => {
-    localUser.value = { ...newUser }
+    if (newUser) {
+      localUser.value = { ...newUser }
+    }
   },
   { immediate: true },
 )
@@ -38,8 +43,8 @@ watch(
 
 <template>
   <Dialog
-    :visible="visible"
-    @update:visible="(value: boolean) => emit('update:visible', value)"
+    :visible="userStore.isUpdateModalVisible"
+    @update:visible="(value: boolean) => userStore.closeUpdateModal()"
     modal
     header="✏️ Editar Usuario"
     class="p-4 rounded-xl shadow-lg"
@@ -73,7 +78,7 @@ watch(
           label="Cancelar"
           icon="pi pi-times"
           class="p-button-outlined p-button-secondary"
-          @click="emit('update:visible', false)"
+          @click="userStore.closeUpdateModal()"
         />
         <Button type="submit" label="Guardar" icon="pi pi-check" class="p-button-success" />
       </div>

@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DashboardView from '@/views/DashboardView.vue'
 import UsersContainer from '@/features/users/UsersContainer.vue'
-import TodoContainer from '@/features/todo/TodoContainer.vue'
+import TaskContainer from '@/features/task/TaskContainer.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,8 +13,8 @@ const router = createRouter({
       children: [
         {
           path: '',
-          name: 'todo',
-          component: TodoContainer,
+          name: 'task',
+          component: TaskContainer,
         },
         {
           path: 'users',

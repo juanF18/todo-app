@@ -14,7 +14,7 @@ const userStore = useUserStore()
 const fetchUsers = async () => {
   try {
     const response = await getUsers()
-    users.value = response?.users ?? []
+    users.value = response ?? []
   } catch (error) {
     console.error('Error al obtener los usuarios:', error)
   }

@@ -1,55 +1,53 @@
-import axios, { type AxiosResponse, AxiosError } from 'axios'
+import axios, { AxiosError, type AxiosInstance, type AxiosResponse } from 'axios'
+import { useToast } from 'primevue/usetoast'
 
-const Axios = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+const Axios: AxiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL, // Asegúrate de tener esta variable en tu .env
+  timeout: 5000,
 })
 
-Axios.interceptors.request.use(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (config: any) => {
-    if (config.url && !config.url.startsWith('http')) {
-      config.url = `${import.meta.env.VITE_API_BASE_URL}${config.url}`
-    }
-    return config
-  },
-  (error: AxiosError) => Promise.reject(error),
-)
-
+// Interceptor de respuestas
 Axios.interceptors.response.use(
   (response: AxiosResponse) => {
-    console.log(`✅ [${response.status}] Solicitud exitosa a ${response.config.url}`)
     return response
   },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (error: any) => {
-    if (error.response) {
-      const { status, config, data } = error.response
-      const message = data?.message || 'Ocurrió un error inesperado.'
+  (error: AxiosError) => {
+    const toast = useToast()
+    const statusCode = error.response?.status
+    const message = (error.response?.data as { message?: string })?.message || error.message
 
-      switch (status) {
-        case 400:
-          console.error(`❌ [400] Solicitud incorrecta: ${config.url} - ${message}`)
-          break
-        case 401:
-          console.warn(`⚠️ [401] No autorizado: ${config.url} - ${message}`)
-          break
-        case 403:
-          console.warn(`🚫 [403] Acceso prohibido: ${config.url} - ${message}`)
-          break
-        case 404:
-          console.error(`🔍 [404] Recurso no encontrado: ${config.url} - ${message}`)
-          break
-        case 500:
-          console.error(`💥 [500] Error interno del servidor: ${config.url} - ${message}`)
-          break
-        default:
-          console.error(`❗ [${status}] Error en la solicitud: ${config.url} - ${message}`)
-          break
-      }
-    } else if (error.request) {
-      console.error('📡 No se recibió respuesta del servidor.')
+    if (statusCode === 400) {
+      toast.add({ severity: 'error', summary: 'Solicitud Inválida', detail: message, life: 3000 })
+    } else if (statusCode === 403) {
+      toast.add({
+        severity: 'error',
+        summary: 'Acceso Prohibido',
+        detail: 'No tienes permisos.',
+        life: 3000,
+      })
+    } else if (statusCode === 404) {
+      toast.add({
+        severity: 'error',
+        summary: 'No Encontrado',
+        detail: 'Recurso no encontrado.',
+        life: 3000,
+      })
+    } else if (statusCode === 500) {
+      toast.add({
+        severity: 'error',
+        summary: 'Error del Servidor',
+        detail: 'Intenta más tarde.',
+        life: 3000,
+      })
+    } else if (!error.response) {
+      toast.add({
+        severity: 'error',
+        summary: 'Sin Conexión',
+        detail: 'Revisa tu conexión a Internet.',
+        life: 3000,
+      })
     } else {
-      console.error(`⚡ Error al configurar la solicitud: ${error.message}`)
+      toast.add({ severity: 'error', summary: 'Error', detail: message, life: 3000 })
     }
 
     return Promise.reject(error)

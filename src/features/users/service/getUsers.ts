@@ -4,10 +4,8 @@ import { USER_ENDPOINT } from '@/constants'
 
 export const getUsers = async () => {
   try {
-    const { data, status } = await Axios.get<User[]>(USER_ENDPOINT)
-    console.log('repuesta server', data)
-    const users = data ?? []
-    return { users, status }
+    const response = await Axios.get<User[]>(USER_ENDPOINT)
+    return response.data
   } catch (error) {
     console.log(error)
   }
