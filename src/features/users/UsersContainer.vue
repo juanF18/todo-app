@@ -6,49 +6,81 @@ import UserUpdateModal from './components/UserUpdateModal.vue'
 import { getUsers, createUser, updateUser, deleteUser } from './service'
 import type { User, CreateUserDTO, UpdateUserDTO } from './model'
 import { useUserStore } from './store/userStore'
+import { showToast } from '@/utils/toastUtil'
 
 const users = ref<User[]>([])
 const userStore = useUserStore()
 
-// Función para obtener usuarios
 const fetchUsers = async () => {
   try {
     const response = await getUsers()
     users.value = response ?? []
   } catch (error) {
+    showToast({
+      type: 'error',
+      message: 'Error al obtener los usuarios.',
+    })
     console.error('Error al obtener los usuarios:', error)
   }
 }
 
-// Funciones para operaciones CRUD
-const addUser = async (userData: CreateUserDTO) => {
+onMounted(fetchUsers)
+
+const handleAddUser = async (userData: CreateUserDTO) => {
   try {
-    await createUser(userData)
-    await fetchUsers() // Refrescar la lista después de crear
+    const response = await createUser(userData)
+
+    if (response.status === 201) {
+      showToast({ message: '✅ Usuario creado exitosamente.' })
+      await fetchUsers()
+      userStore.closeCreateModal()
+      return
+    }
   } catch (error) {
+    showToast({
+      type: 'error',
+      message: '❌ No se pudo crear el usuario. Intenta de nuevo más tarde.',
+    })
     console.error('Error al crear el usuario:', error)
   }
 }
 
-const updateUserById = async (id: string, userData: UpdateUserDTO) => {
+const handleUpdateUser = async (id: string, userData: UpdateUserDTO) => {
   try {
-    await updateUser(id, userData)
-    await fetchUsers() // Refrescar la lista después de actualizar
+    const response = await updateUser(id, userData)
+
+    if (response.status === 200) {
+      showToast({ message: '✅ Usuario actualizado exitosamente.' })
+      await fetchUsers()
+      userStore.closeUpdateModal()
+      return
+    }
   } catch (error) {
+    showToast({
+      type: 'error',
+      message: '❌ No se pudo actualizar el usuario. Intenta de nuevo más tarde.',
+    })
     console.error('Error al actualizar el usuario:', error)
   }
 }
 
-const deleteUserById = async (id: string) => {
+const handleDeleteUser = async (id: string) => {
   try {
-    await deleteUser(id)
-    await fetchUsers() // Refrescar la lista después de eliminar
+    const response = await deleteUser(id)
+
+    if (response.status === 200 || response.status === 204) {
+      await fetchUsers()
+      showToast({ message: '🗑️ Usuario eliminado exitosamente.' })
+      return
+    }
   } catch (error) {
+    showToast({
+      type: 'error',
+      message: '❌ No se pudo eliminar el usuario. Intenta de nuevo más tarde.',
+    })
     console.error('Error al eliminar el usuario:', error)
   }
 }
-
-onMounted(fetchUsers)
 </script>
 
 <template>
@@ -59,7 +91,7 @@ onMounted(fetchUsers)
         @click="userStore.openCreateModal"
         class="bg-green-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-green-600 transition duration-300"
       >
-        Crear Usuario
+        ➕ Crear Usuario
       </button>
     </div>
 
@@ -67,13 +99,13 @@ onMounted(fetchUsers)
       :key="users.length"
       :users="users"
       @edit="userStore.openUpdateModal"
-      @delete="deleteUserById"
+      @delete="handleDeleteUser"
     />
 
     <UserCreateModal
       :visible="userStore.isCreateModalVisible"
       @close="userStore.closeCreateModal"
-      @add="addUser"
+      @add="handleAddUser"
     />
 
     <UserUpdateModal
@@ -81,7 +113,7 @@ onMounted(fetchUsers)
       :user="userStore.selectedUser"
       :visible="userStore.isUpdateModalVisible"
       @close="userStore.closeUpdateModal"
-      @update="updateUserById"
+      @update="handleUpdateUser"
     />
   </div>
 </template>

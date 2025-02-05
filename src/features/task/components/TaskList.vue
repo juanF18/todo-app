@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { defineProps, defineEmits } from 'vue'
 import type { Task } from '../model'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -20,8 +19,6 @@ const paginatedTasks = (tasks: Task[]) => {
 
 <template>
   <div class="w-full rounded-lg shadow-md overflow-hidden bg-white p-3">
-    <h2 class="text-2xl font-bold text-center text-indigo-700 my-4">📋 Lista de Tareas</h2>
-
     <DataTable
       :value="paginatedTasks(props.tasks)"
       stripedRows
@@ -30,12 +27,38 @@ const paginatedTasks = (tasks: Task[]) => {
     >
       <Column field="title" header="Título" sortable class="font-semibold"></Column>
       <Column field="description" header="Descripción" sortable></Column>
-      <Column
-        field="status"
-        header="Estado"
-        :body="(data: Task) => (data.status ? '✅ Completada' : '⏳ Pendiente')"
-      ></Column>
-      <Column field="user.name" header="Asignado a" :body="(data: Task) => data.user.name"></Column>
+
+      <Column field="status" header="Estado">
+        <template #body="slotProps">
+          {{ slotProps.data.status ? '✅ Completada' : '⏳ Pendiente' }}
+        </template>
+      </Column>
+
+      <Column field="user.name" header="Asignado a">
+        <template #body="slotProps">
+          {{ slotProps.data.user.name }}
+        </template>
+      </Column>
+
+      <!-- ✅ Columna para mostrar archivos -->
+      <Column header="Archivos">
+        <template #body="slotProps">
+          <div class="flex flex-col gap-1">
+            <template v-if="slotProps.data.files.length > 0">
+              <a
+                v-for="(file, index) in slotProps.data.files"
+                :key="index"
+                :href="file"
+                target="_blank"
+                class="text-blue-600 hover:underline"
+              >
+                📎 Archivo {{ index + 1 }}
+              </a>
+            </template>
+            <span v-else class="text-gray-400 italic">Sin archivos</span>
+          </div>
+        </template>
+      </Column>
 
       <Column header="Acciones" style="width: 160px">
         <template #body="slotProps">

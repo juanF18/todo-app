@@ -6,6 +6,7 @@ import Textarea from 'primevue/textarea'
 import Dropdown from 'primevue/dropdown'
 import FileUpload, { type FileUploadSelectEvent } from 'primevue/fileupload'
 import Button from 'primevue/button'
+import Chip from 'primevue/chip'
 import { getUsers } from '@/features/users/service'
 import type { CreateTaskDTO } from '../model'
 import type { User } from '@/features/users/model'
@@ -20,6 +21,7 @@ const newTask = ref<CreateTaskDTO>({
   user_id: '',
   files: [],
 })
+
 const users = ref<User[]>([])
 
 onMounted(async () => {
@@ -32,7 +34,12 @@ onMounted(async () => {
 })
 
 const handleFileUpload = (event: FileUploadSelectEvent) => {
-  newTask.value.files = Array.isArray(event.files) ? event.files : [event.files]
+  const selectedFiles = Array.isArray(event.files) ? event.files : [event.files]
+  newTask.value.files = [...(newTask.value.files ?? []), ...selectedFiles] // ✅ Corrige la operación de esparcimiento
+}
+
+const removeFile = (index: number) => {
+  newTask.value.files = (newTask.value.files ?? []).filter((_, i) => i !== index) // ✅ Previene errores
 }
 
 const addTask = () => {
@@ -43,11 +50,9 @@ const addTask = () => {
     formData.append('status', (newTask.value.status ?? false).toString())
     formData.append('user_id', newTask.value.user_id)
 
-    if (newTask.value.files && newTask.value.files.length > 0) {
-      newTask.value.files.forEach((file) => {
-        formData.append('files', file)
-      })
-    }
+    ;(newTask.value.files ?? []).forEach((file: File) => {
+      formData.append('files', file)
+    })
 
     emit('add', formData)
     emit('close')
@@ -110,6 +115,18 @@ const addTask = () => {
           @select="handleFileUpload"
           class="w-full border p-2 rounded"
         />
+
+        <!-- ✅ Chips para mostrar archivos seleccionados -->
+        <div class="flex flex-wrap gap-2 mt-2">
+          <Chip
+            v-for="(file, index) in newTask.files"
+            :key="index"
+            :label="file.name"
+            removable
+            @remove="removeFile(index)"
+            class="bg-blue-100 text-blue-800 px-2 py-1 rounded-md"
+          />
+        </div>
       </div>
 
       <div class="flex justify-end gap-2">
@@ -125,3 +142,14 @@ const addTask = () => {
     </div>
   </Dialog>
 </template>
+
+<style scoped>
+.p-button-success {
+  background-color: #22c55e;
+  border-color: #22c55e;
+}
+.p-button-success:hover {
+  background-color: #16a34a;
+  border-color: #16a34a;
+}
+</style>

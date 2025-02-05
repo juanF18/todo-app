@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { User } from '../model'
-import { defineProps, defineEmits, ref } from 'vue'
+import { ref } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'

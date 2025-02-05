@@ -6,7 +6,7 @@ export interface Task {
   description: string
   status: boolean
   user: User
-  files: File[]
+  files: string[]
 }
 
 export interface CreateTaskDTO {

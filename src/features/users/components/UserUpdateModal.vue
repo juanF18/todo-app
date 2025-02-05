@@ -3,32 +3,13 @@ import { ref, watch } from 'vue'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-import type { User, UpdateUserDTO } from '../model'
-import { updateUser } from '../service'
+import { getUsers, updateUser } from '../service'
 import { useUserStore } from '../store/userStore'
+import type { UpdateUserDTO } from '../model'
 
 const userStore = useUserStore()
 
-const props = defineProps<{
-  user: User
-  visible: boolean
-}>()
-
-const emit = defineEmits(['update:visible', 'user-updated'])
-const localUser = ref<User>({ ...props.user })
-
-const handleUpdateUser = async () => {
-  try {
-    const updatedUser = await updateUser(localUser.value.id, {
-      name: localUser.value.name,
-      email: localUser.value.email,
-    } as UpdateUserDTO)
-    emit('user-updated', updatedUser)
-    userStore.closeUpdateModal()
-  } catch (error) {
-    console.error('Error al actualizar el usuario:', error)
-  }
-}
+const localUser = ref({ name: '', email: '' })
 
 watch(
   () => userStore.selectedUser,
@@ -39,12 +20,27 @@ watch(
   },
   { immediate: true },
 )
+
+const handleUpdateUser = async () => {
+  try {
+    if (userStore.selectedUser) {
+      await updateUser(userStore.selectedUser.id, {
+        name: localUser.value.name,
+        email: localUser.value.email,
+      } as UpdateUserDTO)
+      await getUsers()
+      userStore.closeUpdateModal()
+    }
+  } catch (error) {
+    console.error('Error al actualizar el usuario:', error)
+  }
+}
 </script>
 
 <template>
   <Dialog
     :visible="userStore.isUpdateModalVisible"
-    @update:visible="(value: boolean) => userStore.closeUpdateModal()"
+    @update:visible="(value: boolean) => !value && userStore.closeUpdateModal()"
     modal
     header="✏️ Editar Usuario"
     class="p-4 rounded-xl shadow-lg"

@@ -22,6 +22,11 @@ const updatedTask = ref<UpdateTaskDTO>({
   files: [],
 })
 
+const statusOptions = [
+  { label: '⏳ Pendiente', value: false },
+  { label: '✅ Completada', value: true },
+]
+
 const users = ref<User[]>([])
 
 onMounted(async () => {
@@ -60,11 +65,9 @@ const updateTask = () => {
     formData.append('status', (updatedTask.value.status ?? false).toString())
     formData.append('user_id', updatedTask.value.user_id)
 
-    if (updatedTask.value.files && updatedTask.value.files.length > 0) {
-      updatedTask.value.files.forEach((file) => {
-        formData.append('files', file)
-      })
-    }
+    ;(updatedTask.value.files ?? []).forEach((file: File) => {
+      formData.append('files', file)
+    })
 
     emit('update', formData)
     emit('close')
@@ -112,6 +115,22 @@ const updateTask = () => {
           optionLabel="name"
           optionValue="id"
           placeholder="Seleccionar usuario"
+          class="w-full"
+        />
+      </div>
+
+      <!-- ✅ Dropdown para el estado de la tarea -->
+      <div>
+        <label for="status" class="block text-sm font-medium text-gray-700"
+          >Estado de la Tarea:</label
+        >
+        <Dropdown
+          id="status"
+          v-model="updatedTask.status"
+          :options="statusOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar estado"
           class="w-full"
         />
       </div>
